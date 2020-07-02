@@ -8,6 +8,7 @@ import (
 	"github.com/tendermint/tendermint/crypto"
 	yaml "gopkg.in/yaml.v2"
 
+	"github.com/cosmos/cosmos-sdk/hexutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 )
@@ -27,6 +28,7 @@ type BaseAccount struct {
 	PubKey        crypto.PubKey  `json:"public_key" yaml:"public_key"`
 	AccountNumber uint64         `json:"account_number" yaml:"account_number"`
 	Sequence      uint64         `json:"sequence" yaml:"sequence"`
+	CodeHash      hexutil.Bytes  `json:"code_hash" yaml:"code_hash"`
 }
 
 // NewBaseAccount creates a new BaseAccount object
@@ -128,6 +130,47 @@ func (acc *BaseAccount) GetSequence() uint64 {
 func (acc *BaseAccount) SetSequence(seq uint64) error {
 	acc.Sequence = seq
 	return nil
+}
+
+// GetCodeHash - Implements sdk.Account.
+func (acc *BaseAccount) GetCodeHash() []byte {
+	return acc.CodeHash
+}
+
+// SetCodeHash - Implements sdk.Account.
+func (acc *BaseAccount) SetCodeHash(codeHash []byte) {
+	acc.CodeHash = codeHash
+}
+
+// Balance returns the balance of an account
+func (acc *BaseAccount) Balance() sdk.Int {
+	coins := acc.GetCoins()
+	if coins == nil {
+		return sdk.NewInt(0)
+	}
+	return coins.AmountOf(sdk.DefaultBondDenom).TruncateInt()
+}
+
+// SetBalance sets an account's balance of native token
+func (acc *BaseAccount) SetBalance(amt sdk.Int) {
+	coins := acc.GetCoins()
+	diff := amt.Sub(coins.AmountOf(sdk.DefaultBondDenom).TruncateInt())
+	switch {
+	case diff.IsZero():
+		return
+
+	case diff.IsPositive():
+		// Increase coins to amount
+		coins = coins.Add(sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, diff)})
+
+	default:
+		// Decrease coin to amount
+		coins = coins.Sub(sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, diff.Neg())})
+	}
+
+	if err := acc.SetCoins(coins); err != nil {
+		panic(fmt.Sprintf("Could not set coins for address %s", acc.GetAddress()))
+	}
 }
 
 // SpendableCoins returns the total set of spendable coins. For a base account,
