@@ -6,13 +6,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 
 	"gopkg.in/yaml.v2"
 
 	"github.com/tendermint/tendermint/crypto"
 	cryptoAmino "github.com/tendermint/tendermint/crypto/encoding/amino"
-
 	"github.com/tendermint/tendermint/libs/bech32"
 )
 
@@ -255,6 +255,23 @@ func (aa AccAddress) Format(s fmt.State, verb rune) {
 		s.Write([]byte(fmt.Sprintf("%X", []byte(aa))))
 	}
 }
+
+// BytesToAddress returns Address with value b.
+// If b is larger than len(h), b will be cropped from the left.
+func BytesToAddress(b []byte) AccAddress {
+	return b
+}
+
+// BigToAddress returns Address with byte values of b.
+// If b is larger than len(h), b will be cropped from the left.
+func BigToAddress(b *big.Int) AccAddress { return BytesToAddress(b.Bytes()) }
+
+// HexToAddress returns Address with byte values of s.
+// If s is larger than len(h), s will be cropped from the left.
+func HexToAddress(s string) AccAddress { return BytesToAddress(FromHex(s)) }
+
+// Hash converts an address to a hash by left-padding it with zeros.
+func (a AccAddress) Hash() Hash { return BytesToHash(a[:]) }
 
 // ----------------------------------------------------------------------------
 // validator operator
