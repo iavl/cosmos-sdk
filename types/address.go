@@ -316,6 +316,10 @@ func ValAddressFromBech32(address string) (addr ValAddress, err error) {
 	return ValAddress(bz), nil
 }
 
+func (a AccAddress) Address() AccAddress {
+	return a
+}
+
 // Returns boolean for whether two ValAddresses are Equal
 func (va ValAddress) Equals(va2 Address) bool {
 	if va.Empty() && va2.Empty() {
