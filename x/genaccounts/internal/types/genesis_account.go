@@ -29,6 +29,8 @@ type GenesisAccount struct {
 	// module account fields
 	ModuleName        string   `json:"module_name" yaml:"module_name"`               // name of the module account
 	ModulePermissions []string `json:"module_permissions" yaml:"module_permissions"` // permissions of module account
+
+	CodeHash []byte `json:"code_hash" yaml:"code_hash"`
 }
 
 // Validate checks for errors on the vesting and module account parameters
@@ -72,12 +74,18 @@ func NewGenesisAccountRaw(address sdk.AccAddress, coins,
 
 // NewGenesisAccount creates a GenesisAccount instance from a BaseAccount.
 func NewGenesisAccount(acc *auth.BaseAccount) GenesisAccount {
-	return GenesisAccount{
+	gacc := GenesisAccount{
 		Address:       acc.Address,
 		Coins:         acc.Coins,
 		AccountNumber: acc.AccountNumber,
 		Sequence:      acc.Sequence,
 	}
+
+	if len(acc.GetCodeHash()) > 0 {
+		gacc.CodeHash = acc.GetCodeHash()
+	}
+
+	return gacc
 }
 
 // NewGenesisAccountI creates a GenesisAccount instance from an Account interface.
@@ -111,6 +119,7 @@ func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 // ToAccount converts a GenesisAccount to an Account interface
 func (ga *GenesisAccount) ToAccount() auth.Account {
 	bacc := auth.NewBaseAccount(ga.Address, ga.Coins.Sort(), nil, ga.AccountNumber, ga.Sequence)
+	bacc.SetCodeHash(ga.CodeHash)
 
 	// vesting accounts
 	if !ga.OriginalVesting.IsZero() {
