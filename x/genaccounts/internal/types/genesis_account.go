@@ -97,6 +97,10 @@ func NewGenesisAccountI(acc authexported.Account) (GenesisAccount, error) {
 		Sequence:      acc.GetSequence(),
 	}
 
+	if len(acc.GetCodeHash()) > 0 {
+		gacc.CodeHash = acc.GetCodeHash()
+	}
+
 	if err := gacc.Validate(); err != nil {
 		return gacc, err
 	}
