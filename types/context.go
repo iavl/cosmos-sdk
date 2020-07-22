@@ -34,6 +34,8 @@ type Context struct {
 	minGasPrice   DecCoins
 	consParams    *abci.ConsensusParams
 	eventManager  *EventManager
+	Simulate      bool // for EVM
+
 }
 
 // Proposed rename, not done to avoid API breakage

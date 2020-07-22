@@ -787,6 +787,11 @@ func (app *BaseApp) runMsgs(ctx sdk.Context, msgs []sdk.Msg, mode RunTxMode) (re
 			return sdk.ErrUnknownRequest("unrecognized message type: " + msgRoute).Result()
 		}
 
+		ctx.Simulate = false
+		if mode == runTxModeSimulate {
+			ctx.Simulate = true
+		}
+
 		var msgResult sdk.Result
 
 		// skip actual execution for CheckTx mode
